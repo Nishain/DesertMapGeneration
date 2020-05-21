@@ -7,7 +7,9 @@ package icewalk;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
+import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -46,27 +48,7 @@ public class ShapeGenerator {
     private int[] salt=new int[]{2,1,3,4,0};
     public int rand(int lowerBound,int higherBound){
         return random.nextInt(higherBound-lowerBound)+lowerBound;
-        /*n=System.nanoTime()-n;
-        String nanoString = Long.toString(n%100000);
-        String jumbledString="";
-        for(int i:salt){
-            try{
-                jumbledString+=nanoString.charAt(i);
-            }catch(StringIndexOutOfBoundsException e){
-                System.out.println("string "+nanoString);
-                throw e;
-            }
-        }
-        random
-        String nanoString = Long.toString(n);
-        nanoString = nanoString.substring(0, 1);
-        int lastTwoDigits = (int) (Long.parseInt(nanoString)%10000);
-        int lastTwoDigits=(int) (Long.parseLong(jumbledString)%100000);
-        System.out.println("val"+lastTwoDigits);
-        int val=((int) ((higherBound-lowerBound)*(((double)lastTwoDigits)/100)));
-        
-        return val+lowerBound;*/
-        //return ThreadLocalRandom.current().nextInt(lowerBound,higherBound);
+       
     }
     private boolean ranBool(){
         return random.nextBoolean();
@@ -85,6 +67,128 @@ public class ShapeGenerator {
             movedX += lastMovedOffset;
             return Double.NaN;
         }
+    }
+   
+    public GeneralPath drawSinglePath(int startX,int startY,int noOfBends){
+        
+        GeneralPath p = new GeneralPath();
+        double[] point;
+        p.moveTo(startX, startY);
+        int rotationDegree = rand(-5, 5);
+        int distance=rand(5, 20);
+        point = new double[]{startX,startY};
+        double angle;
+        for (int i = 1; i < noOfBends; i++) {
+            rotationDegree += rand(-45,45);
+                distance=10;
+                angle=Math.toRadians(rotationDegree);
+                point[0]=point[0] + Math.sin(angle)*distance;
+                point[1]=point[1] + Math.cos(angle)*distance;
+            p.lineTo(point[0], point[1]);
+        }
+        return p;
+    }
+    private void drawRootBranch(int startX,int startY,int startAngle,ArrayList<GeneralPath> cracks){
+        int rotationDegree = startAngle;
+        double[] point = new double[]{startX,startY,startX,startY};
+        GeneralPath root= new GeneralPath();
+        GeneralPath outlineShape = new GeneralPath();
+        int distance,distanceToOuline;
+        double angle,Xangle,Yangle;
+        root.moveTo(startX, startY);
+        int count=50;
+        double[][] outlineCoordinates=new double[count*2][];
+        outlineCoordinates[0]=outlineCoordinates[count]=new double[]{startX, startY};
+        
+        for (int i = 1; i < count; i++) {
+                distance=10;
+                distanceToOuline=rand(10, 20);
+                angle=Math.toRadians(rotationDegree);
+                Xangle=Math.toRadians(rotationDegree-90);
+                Yangle=Math.toRadians(rotationDegree+90);//Math.toRadians(angle-(angle<0?-90:90));
+                
+               
+                point[0]=point[0] + Math.sin(angle)*distance;
+                point[1]=point[1] + Math.cos(angle)*distance;
+                
+                 outlineCoordinates[i]=new double[]{
+                    point[0] + Math.sin(Xangle)*distanceToOuline,
+                    point[1] + Math.cos(Xangle)*distanceToOuline,
+                };
+                
+                outlineCoordinates[count+i]=new double[]{                  
+                    point[0] + Math.sin(Yangle)*distanceToOuline,
+                    point[1] + Math.cos(Yangle)*distanceToOuline,
+                }; 
+                if(i==(count-1)){
+                 outlineCoordinates[count]=new double[]{                  
+                    point[0],point[1]
+                };
+                outlineCoordinates[outlineCoordinates.length-1]=new double[]{                  
+                    point[0],point[1]
+                }; 
+                }
+                root.lineTo(point[0], point[1]);
+                if(ranBool()){
+                    drawBranch((int)point[0],
+                            (int) point[1],
+                            ((ranBool()?-1:1)*45)+rand(0, 45), 
+                            1,
+                            cracks);
+                    
+                }
+                rotationDegree += rand(-45,45);
+        }
+        
+        outlineShape.moveTo(outlineCoordinates[0][0], outlineCoordinates[0][1]);
+        for (int i = 1; i <= count; i++) {
+            outlineShape.lineTo(
+                    outlineCoordinates[i][0], 
+                    outlineCoordinates[i][1]);
+        }
+        for (int i = outlineCoordinates.length-1; i > count; i--) {
+            outlineShape.lineTo(
+                    outlineCoordinates[i][0], 
+                    outlineCoordinates[i][1]);
+        }
+        //outlineShape.closePath();
+        cracks.add(root);
+        cracks.add(outlineShape);
+    }
+    
+    private void drawBranch(int startX,int startY,int startAngle,int depth,ArrayList<GeneralPath> cracks){
+        int newDepth = depth;
+        if(depth==2)
+            return;
+        newDepth++;
+        int rotationDegree = startAngle;
+        double[] point = new double[]{startX,startY};
+        GeneralPath root= new GeneralPath();
+        int distance;
+        double angle;
+        root.moveTo(startX, startY);
+        for (int i = 1; i < 7; i++) {
+                distance=2;
+                angle=Math.toRadians(rotationDegree);
+                point[0]=point[0] + Math.sin(angle)*distance;
+                point[1]=point[1] + Math.cos(angle)*distance;
+                root.lineTo(point[0], point[1]);
+                if(true){
+                    drawBranch((int)point[0],
+                            (int) point[1],
+                            rotationDegree+((ranBool()?-1:1)*45)+rand(0, 45), 
+                            newDepth,
+                            cracks);
+                }
+                rotationDegree += rand(-45,45);
+        }
+        cracks.add(root);
+    }
+    public ArrayList<GeneralPath> drawCracks (int startX,int startY){
+        ArrayList<GeneralPath> cracks = new ArrayList<>();
+        drawRootBranch(startX, startY, 90,cracks);
+        
+        return cracks;
     }
     private double[] getArcPoint(double centerPositionY, double lastY) {
         double[] values = new double[3];

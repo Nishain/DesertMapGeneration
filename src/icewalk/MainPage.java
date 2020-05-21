@@ -5,20 +5,9 @@
  */
 package icewalk;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
-import java.awt.Shape;
-import java.awt.Stroke;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Rectangle2D;
-import java.util.Random;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 /**
  *
@@ -29,21 +18,11 @@ public class MainPage extends javax.swing.JFrame {
     /**
      * Creates new form MainPage
      */
-    Random random;
-     public  int rand(int lowerBound,int higherBound){
-        return random.nextInt(higherBound-lowerBound)+lowerBound;
-        //return ThreadLocalRandom.current().nextInt(lowerBound,higherBound);
-    }
-    private boolean ranBool(){
-        return random.nextBoolean();
-    }
     public MainPage() {
-        random = new Random();
         initComponents();
-        this.setSize(new Dimension(1000, 1000));
         
     }
-   
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -53,40 +32,38 @@ public class MainPage extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        mapPanel1 = new icewalk.MapPanel();
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setFocusCycleRoot(false);
+        setResizable(false);
 
-        jButton1.setText("Generate");
+        jButton1.setText("Next");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
+        mapPanel1.add(jButton1);
+        jButton1.setBounds(200, 490, 60, 28);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(285, Short.MAX_VALUE)
-                .addComponent(jButton1)
-                .addGap(267, 267, 267))
+            .addComponent(mapPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 650, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(38, 38, 38)
-                .addComponent(jButton1)
-                .addContainerGap(312, Short.MAX_VALUE))
+            .addComponent(mapPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 600, Short.MAX_VALUE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        this.repaint();
-        
+        mapPanel1.nextMap();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
@@ -123,133 +100,9 @@ public class MainPage extends javax.swing.JFrame {
             }
         });
     }
-    
-    @Override
-    public void paint(Graphics grphcs) {
-        jButton1.setEnabled(false);
-        random = new Random(System.nanoTime());
-        Graphics2D g = (Graphics2D) grphcs;
-        
-        
-        
-      /*  for (int i = 0; i < 100; i++) {
-            shapes = generateShape(rand(0, 1000),rand(0, 1000), rand(0, 180),((double)(rand(1, 5)))/10);
-            g.setColor(ranBool()?Color.GRAY:Color.WHITE);
-            g.fill(shapes[0]);
-            g.setColor(Color.BLACK);
-            g.draw(shapes[1]);
-        }*/
-        
-        
-        jButton1.setEnabled(true);
-        drawGround(g);
-        //drawSnowGround(g);
-        //super.paint(grphcs); //To change body of generated methods, choose Tools | Templates.
-    }
-    private void drawSnowGround(Graphics2D g){
-        GeneralPath[] shapes;
-        ShapeGenerator sg = new ShapeGenerator();
-        int dimesionSize = this.getSize().width;
-       
-        int crowdDistanceX=0,crowdDistanceY=0;
-        
-        
-        boolean direction;
-        Color groundColor = Color.WHITE,
-                groundDarker=Color.LIGHT_GRAY;
-        for (int i = 0; i < 10; i++) {
-            crowdDistanceX=rand(0,800);
-            crowdDistanceY=rand(0,800);
-            for (int j = 0; j < 30; j++) {
-                direction = ranBool();
-                if(direction)
-                    shapes = sg.generateShape(rand(crowdDistanceX,crowdDistanceX+200),rand(crowdDistanceY,crowdDistanceY+200), rand(0, 180),((double)(rand(3, 6)))/20);
-                else
-                    shapes = sg.generateShape(dimesionSize - rand(crowdDistanceX,crowdDistanceX+200),dimesionSize - rand(crowdDistanceY,crowdDistanceY+200), rand(0, 180),((double)(rand(3, 6)))/20);
-                g.setColor(groundColor);
-                g.fill(shapes[0]);
-                g.setColor(shadeBlackOutline());
-                g.setStroke(new BasicStroke(((float)rand(5,10))/10));
-                g.draw(shapes[1]);
-            }
-            for (int j = 0; j < 40; j++) {
-                direction = ranBool();
-                if(direction)
-                    shapes = sg.generateShape(rand(crowdDistanceX,crowdDistanceX+200),rand(crowdDistanceY,crowdDistanceY+200), rand(0, 180),((double)(rand(1, 2)))/20);
-                else
-                    shapes = sg.generateShape(dimesionSize - rand(crowdDistanceX,crowdDistanceX+200),dimesionSize - rand(crowdDistanceY,crowdDistanceY+200), rand(0, 180),((double)(rand(1, 2)))/20);
-                g.setColor(rand(0, 100)>75?groundDarker:groundColor);
-                g.fill(shapes[0]);
-                g.setColor(shadeBlackOutline());
-                g.setStroke(new BasicStroke(((float)rand(5,10))/10));
-                g.draw(shapes[1]);
-            }
-            
-        }
-    }
-    private void drawGround(Graphics2D g){
-        GeneralPath[] shapes;
-        ShapeGenerator sg = new ShapeGenerator();
-        int dimesionSize = this.getSize().width;
-       
-        int crowdDistanceX=0,crowdDistanceY=0;
-        g.setColor(Color.BLUE);
-        g.fillRect(0, 0, dimesionSize, dimesionSize);
-        boolean direction;
-        Color groundColor = new Color(239,157,84),
-                groundDarker=new Color(224, 133, 53);
-        int colonyPopulationCount;
-        for (int i = 0; i < 20; i++) {
-            crowdDistanceX=rand(0,800);
-            crowdDistanceY=rand(0,800);
-            int lowScale=3,highScale=6;
-            boolean isDakerRegion;
-            colonyPopulationCount = rand(130, 190);
-            for (int j = 0; j < colonyPopulationCount; j++) {
-                if(j==51){
-                    lowScale=1;
-                    highScale=3;
-                }
-                direction = ranBool();
-                if(direction)
-                    shapes = sg.generateShape(rand(crowdDistanceX,crowdDistanceX+200),rand(crowdDistanceY,crowdDistanceY+200), rand(0, 180),((double)(rand(lowScale, highScale)))/20);
-                else
-                    shapes = sg.generateShape(dimesionSize - rand(crowdDistanceX,crowdDistanceX+200),dimesionSize - rand(crowdDistanceY,crowdDistanceY+200), rand(0, 180),((double)(rand(lowScale, highScale)))/20);
-                
-                g.setColor((isDakerRegion=rand(0, 100)>75)?groundDarker:groundColor);
-                g.fill(shapes[0]);
-                if(!isDakerRegion)
-                    drawShapeOutline(shapes[1], g);
-            }
-        }
-    }
-    private Color shadeBlackOutline(){
-        int channnel = rand(100,200);
-        return new Color(channnel,channnel,channnel);
-    }
-    private void drawShapeOutline(GeneralPath path,Graphics2D g){
-        int channnel = rand(-50,0),channel2;
-        
-        
-        //239,157,84
-        //when channel becomer more negative line becomes thinner
-        float maxSize = (float)rand(2,6);
-        float secondLayerStrokeSize=(float)( (maxSize+0.5)-(( ((double)-channnel) /50f)*maxSize));
-        
-        
-        
-        
-        g.setStroke(new BasicStroke(secondLayerStrokeSize,BasicStroke.CAP_ROUND,
-                        BasicStroke.JOIN_ROUND));
-        g.setColor(new Color(224+channnel, 133+channnel, 53+channnel));
-        g.draw(path);
-    }
-    private Color shadeOutlineColor(){
-        int channnel = rand(-50,0);
-        return new Color(224+channnel, 133+channnel, 53+channnel);
-    }
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private icewalk.MapPanel mapPanel1;
     // End of variables declaration//GEN-END:variables
 }

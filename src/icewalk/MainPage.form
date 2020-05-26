@@ -25,12 +25,12 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="mapPanel1" alignment="0" pref="650" max="32767" attributes="0"/>
+          <Component id="mapPanel1" alignment="0" pref="854" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="mapPanel1" alignment="0" pref="600" max="32767" attributes="0"/>
+          <Component id="mapPanel1" alignment="0" pref="654" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
   </Layout>

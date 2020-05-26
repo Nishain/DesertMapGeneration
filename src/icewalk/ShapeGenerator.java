@@ -9,9 +9,13 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -68,7 +72,7 @@ public class ShapeGenerator {
             return Double.NaN;
         }
     }
-   
+    
     public GeneralPath drawSinglePath(int startX,int startY,int noOfBends){
         
         GeneralPath p = new GeneralPath();
@@ -88,7 +92,7 @@ public class ShapeGenerator {
         }
         return p;
     }
-    private void drawRootBranch(int startX,int startY,int startAngle,ArrayList<GeneralPath> cracks){
+    private void drawRootBranch(int startX,int startY,int startAngle,ArrayList<GeneralPath[]> cracks,boolean isRootBranching){
         int rotationDegree = startAngle;
         double[] point = new double[]{startX,startY,startX,startY};
         GeneralPath root= new GeneralPath();
@@ -96,10 +100,11 @@ public class ShapeGenerator {
         int distance,distanceToOuline;
         double angle,Xangle,Yangle;
         root.moveTo(startX, startY);
-        int count=50;
+        int count=branchConfigurations.rootBranchNoOfBends;
         double[][] outlineCoordinates=new double[count*2][];
         outlineCoordinates[0]=outlineCoordinates[count]=new double[]{startX, startY};
         
+        ArrayList<GeneralPath> branch = new ArrayList<>();
         for (int i = 1; i < count; i++) {
                 distance=10;
                 distanceToOuline=rand(10, 20);
@@ -129,14 +134,21 @@ public class ShapeGenerator {
                 }; 
                 }
                 root.lineTo(point[0], point[1]);
-                if(ranBool()){
-                    drawBranch((int)point[0],
+                
+                  if(branchConfigurations.isRandom?ranBool():true)                       
+                        drawBranch((int)point[0],
                             (int) point[1],
                             ((ranBool()?-1:1)*45)+rand(0, 45), 
                             1,
-                            cracks);
-                    
-                }
+                            branch);
+                    if(isRootBranching && rand(0, 100)>90){
+                        branchConfigurations.isMainBranch = false;
+                        drawRootBranch((int)point[0],
+                            (int) point[1],
+                            ((ranBool()?-1:1)*45)+rand(0, 45), 
+                            cracks,false);
+                    }
+                
                 rotationDegree += rand(-45,45);
         }
         
@@ -152,13 +164,121 @@ public class ShapeGenerator {
                     outlineCoordinates[i][1]);
         }
         //outlineShape.closePath();
-        cracks.add(root);
-        cracks.add(outlineShape);
+        
+        branch.add(root);
+        branch.add(outlineShape);
+        cracks.add(branch.toArray(new GeneralPath[0]));
     }
-    
+    public GeneralPath drawLine(int startX,int startY,int count){
+        int rotationDegree = rand(0,360);
+        double[] point = new double[]{startX,startY,startX,startY};
+        GeneralPath outlineShape = new GeneralPath();
+        int distance,distanceToOuline;
+        double angle,Xangle,Yangle;
+        double[][] outlineCoordinates=new double[count*2][];
+        outlineCoordinates[0]=outlineCoordinates[count]=new double[]{startX, startY};
+        
+        for (int i = 1; i < count; i++) {
+                distance=rand(10,20);
+                distanceToOuline=rand(2, 7);
+                angle=Math.toRadians(rotationDegree);
+                Xangle=Math.toRadians(rotationDegree-90);
+                Yangle=Math.toRadians(rotationDegree+90);//Math.toRadians(angle-(angle<0?-90:90));
+                
+               
+                point[0]=point[0] + Math.sin(angle)*distance;
+                point[1]=point[1] + Math.cos(angle)*distance;
+                
+                 outlineCoordinates[i]=new double[]{
+                    point[0] + Math.sin(Xangle)*distanceToOuline,
+                    point[1] + Math.cos(Xangle)*distanceToOuline,
+                };
+                
+                outlineCoordinates[count+i]=new double[]{                  
+                    point[0] + Math.sin(Yangle)*distanceToOuline,
+                    point[1] + Math.cos(Yangle)*distanceToOuline,
+                }; 
+                if(i==(count-1)){
+                 outlineCoordinates[count]=new double[]{                  
+                    point[0],point[1]
+                };
+                outlineCoordinates[outlineCoordinates.length-1]=new double[]{                  
+                    point[0],point[1]
+                }; 
+                }
+               
+                rotationDegree += rand(-45,45);
+        }
+        
+        outlineShape.moveTo(outlineCoordinates[0][0], outlineCoordinates[0][1]);
+        for (int i = 1; i <= count; i++) {
+            outlineShape.lineTo(
+                    outlineCoordinates[i][0], 
+                    outlineCoordinates[i][1]);
+        }
+        for (int i = outlineCoordinates.length-1; i > count; i--) {
+            outlineShape.lineTo(
+                    outlineCoordinates[i][0], 
+                    outlineCoordinates[i][1]);
+        }
+        outlineShape.closePath();
+        return outlineShape;
+    }
+    static class branchConfig{
+        private static branchConfig defualtSettings=new branchConfig();
+        private boolean isRandom=false;
+        private boolean isMainBranch=true;
+        public void resetToDefault(){
+            Field[] fields=this.getClass().getFields();
+            for (int i = 0; i < fields.length; i++) {
+                try {
+                    fields[i].set(this,fields[i].get(defualtSettings));
+                } catch (IllegalArgumentException | IllegalAccessException ex) {
+                    Logger.getLogger(ShapeGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                } 
+                
+            }
+        }
+        public int noOfBends=5,maximumBranchDepth=2,bendLength=3,rootBranchNoOfBends=50;
+
+        public branchConfig setIsMainBranch(boolean isMainBranch) {
+            this.isMainBranch = isMainBranch;
+            return this;
+        }
+
+        
+        
+        public branchConfig setRootBranchNoOfBends(int rootBranchNoOfBends) {
+            this.rootBranchNoOfBends = rootBranchNoOfBends;
+            return this;
+        }
+
+        public branchConfig setIsRandom(boolean isRandom){
+            this.isRandom=isRandom;
+            return this;
+        }
+        
+        public branchConfig setNoOfBends(int noOfBends) {
+            this.noOfBends = noOfBends;
+            return this;
+        }
+
+        public branchConfig setMaximumBranchDepth(int maximumBranchDepth) {
+            this.maximumBranchDepth = maximumBranchDepth;
+            return this;
+        }
+
+        public branchConfig setBendLength(int bendLength) {
+            this.bendLength = bendLength;
+            return this;
+        }
+        
+    }
+    public branchConfig branchConfigurations = new branchConfig();
     private void drawBranch(int startX,int startY,int startAngle,int depth,ArrayList<GeneralPath> cracks){
         int newDepth = depth;
-        if(depth==2)
+        if(branchConfigurations.isRandom?depth >= rand(0,branchConfigurations.maximumBranchDepth)
+                :depth==branchConfigurations.maximumBranchDepth)
             return;
         newDepth++;
         int rotationDegree = startAngle;
@@ -167,13 +287,13 @@ public class ShapeGenerator {
         int distance;
         double angle;
         root.moveTo(startX, startY);
-        for (int i = 1; i < 7; i++) {
-                distance=2;
+        for (int i = 1; i < branchConfigurations.noOfBends; i++) {
+                distance=branchConfigurations.bendLength;
                 angle=Math.toRadians(rotationDegree);
                 point[0]=point[0] + Math.sin(angle)*distance;
                 point[1]=point[1] + Math.cos(angle)*distance;
                 root.lineTo(point[0], point[1]);
-                if(true){
+                if(branchConfigurations.isRandom?ranBool():true){
                     drawBranch((int)point[0],
                             (int) point[1],
                             rotationDegree+((ranBool()?-1:1)*45)+rand(0, 45), 
@@ -184,11 +304,15 @@ public class ShapeGenerator {
         }
         cracks.add(root);
     }
-    public ArrayList<GeneralPath> drawCracks (int startX,int startY){
-        ArrayList<GeneralPath> cracks = new ArrayList<>();
-        drawRootBranch(startX, startY, 90,cracks);
-        
-        return cracks;
+    public GeneralPath[][] drawCracks (int startX,int startY){
+        ArrayList<GeneralPath[]> cracks = new ArrayList<>();
+        drawRootBranch(startX, startY, 90,cracks,true);
+        return cracks.toArray(new GeneralPath[0][]);
+    }
+    public GeneralPath[] drawRoadPath(int startX,int startY){
+        ArrayList<GeneralPath[]> cracks = new ArrayList<>();
+        drawRootBranch(startX, startY, 90,cracks,false);
+        return cracks.get(0);
     }
     private double[] getArcPoint(double centerPositionY, double lastY) {
         double[] values = new double[3];

@@ -180,7 +180,7 @@ public class ShapeGenerator {
         
         for (int i = 1; i < count; i++) {
                 distance=rand(10,20);
-                distanceToOuline=rand(2, 7);
+                distanceToOuline=rand(12, 25);
                 angle=Math.toRadians(rotationDegree);
                 Xangle=Math.toRadians(rotationDegree-90);
                 Yangle=Math.toRadians(rotationDegree+90);//Math.toRadians(angle-(angle<0?-90:90));

@@ -20,7 +20,7 @@ public class MainPage extends javax.swing.JFrame {
      */
     public MainPage() {
         initComponents();
-        
+        mapPanel1.nextMap();
     }
 
     /**
@@ -39,14 +39,16 @@ public class MainPage extends javax.swing.JFrame {
         setFocusCycleRoot(false);
         setResizable(false);
 
-        jButton1.setText("Next");
+        jButton1.setBackground(new java.awt.Color(153, 0, 0));
+        jButton1.setForeground(new java.awt.Color(255, 255, 255));
+        jButton1.setText("Generate Next Map");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
         mapPanel1.add(jButton1);
-        jButton1.setBounds(200, 490, 60, 28);
+        jButton1.setBounds(300, 480, 170, 40);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);

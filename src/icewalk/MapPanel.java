@@ -139,45 +139,49 @@ public class MapPanel extends JComponent {
     }
     
     private void drawMountainEdges(Color groundColor, ShapeGenerator sg, int dimensionSizeX, int dimensionSizeY, Graphics2D g) {
+        float enlargingFactor = 0;
+        Color editedColor;
         sg.branchConfigurations.
                 setRootBranchNoOfBends(30).setMaximumBranchDepth(3).setNoOfBends(3);
         for (int i = 0; i < rand(1,4); i++) {
-//            float brightnessRatio = ((float) rand(9, 10)) / 10f;
-//            editedColor = new Color(
-//                    (int) (rand(190, 255) * brightnessRatio),
-//                    (int) (rand(groundColor.getGreen(), 200) * brightnessRatio),
-//                    (int) (groundColor.getBlue() * brightnessRatio));
+            float brightnessRatio = ((float) rand(9, 10)) / 10f;
+            editedColor = new Color(
+                    (int) (rand(190, 255) * brightnessRatio),
+                    (int) (rand(groundColor.getGreen(), 200) * brightnessRatio),
+                    (int) (groundColor.getBlue() * brightnessRatio));
 
             GeneralPath[][] cracks = sg.drawCracks(rand(0, dimensionSizeX), rand(0, dimensionSizeY));
-            g.setColor(groundColor);
+            g.setColor(editedColor);
             for (int j = 0; j < cracks.length; j++) {
                 g.fill(cracks[j][cracks[j].length - 1]);
             }
-            
+            float[] rootBranchWidths = new float[cracks.length];
             for (int j = 1; j < 16; j++) {
                 
-                g.setColor(DarkerColor(groundColor, 1f - (0.025f * j)));
+                g.setColor(DarkerColor(editedColor, 1f - (0.025f * j)));
                 
                 for (int k = 0; k < cracks.length; k++) {
-                    g.setStroke((new BasicStroke(17 - j, BasicStroke.CAP_ROUND,
+                    enlargingFactor = ((float)rand(10, 16)/10f);
+                    g.setStroke((new BasicStroke((17 - j)*enlargingFactor, BasicStroke.CAP_ROUND,
                             BasicStroke.JOIN_ROUND)));
                     for (int l = 0; l < cracks[k].length - 2; l++) {
                         g.draw(cracks[k][l]);
                     }
-                    g.setStroke((new BasicStroke(21 - j, BasicStroke.CAP_ROUND,
+                    g.setStroke((new BasicStroke((21*enlargingFactor) - j, BasicStroke.CAP_ROUND,
                             BasicStroke.JOIN_ROUND)));
+                    rootBranchWidths[k]=enlargingFactor;
                     g.draw(cracks[k][cracks[k].length - 2]);
                 }
             }
             
             for (int j = 0; j < cracks.length; j++) {
-                g.setColor(groundColor);
-                g.setStroke((new BasicStroke(1, BasicStroke.CAP_ROUND,
+                g.setColor(editedColor);
+                g.setStroke((new BasicStroke(1 * rootBranchWidths[j], BasicStroke.CAP_ROUND,
                         BasicStroke.JOIN_ROUND)));
                 for (int k = 0; k < cracks[j].length - 2; k++) {
                     g.draw(cracks[j][k]);
                 }
-                g.setStroke((new BasicStroke(3, BasicStroke.CAP_ROUND,
+                g.setStroke((new BasicStroke(3 * rootBranchWidths[j], BasicStroke.CAP_ROUND,
                         BasicStroke.JOIN_ROUND)));
                 g.draw(cracks[j][cracks[j].length - 2]);
             }
